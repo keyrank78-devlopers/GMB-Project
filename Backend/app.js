@@ -39,6 +39,7 @@ app.use(
             },
         },
         crossOriginEmbedderPolicy: false, // swagger-ui needs this off
+        crossOriginResourcePolicy: { policy: "cross-origin" },
         hsts: {
             maxAge: 31536000, // 1 year
             includeSubDomains: true,
@@ -53,10 +54,17 @@ app.use(
 );
 
 // ─── 2. CORS ─────────────────────────────────────────────────────────────────
-// Only allow whitelisted origins — never fallback to wildcard in production
-const allowedOrigins = process.env.ALLOWED_ORIGINS
-    ? process.env.ALLOWED_ORIGINS.split(",").map((o) => o.trim())
-    : ["http://localhost:3000", "http://localhost:5173"];
+// Local dev plus the live Vercel app. ALLOWED_ORIGINS adds more; it does not replace these.
+const defaultOrigins = [
+    "http://localhost:3000",
+    "http://localhost:5173",
+    "https://gmb-project-seven.vercel.app",
+];
+const envOrigins = (process.env.ALLOWED_ORIGINS || "")
+    .split(",")
+    .map((origin) => origin.trim().replace(/\/$/, ""))
+    .filter(Boolean);
+const allowedOrigins = [...new Set([...defaultOrigins, ...envOrigins])];
 
 app.use(
     cors({
